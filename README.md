@@ -15,3 +15,9 @@ go mod init employeeapp
 go get github.com/lib/pq
 go mod tidy
 go run main.go
+
+
+# Using Gin Gin as HTTP web framework
+branch gin-basic
+
+

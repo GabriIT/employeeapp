@@ -2,11 +2,10 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
@@ -21,23 +20,30 @@ func main() {
 	connStr := "postgres://postgres:postgres@localhost:5432/employees?sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal("Database connection failed:", err)
+		log.Fatal("Failed to connect to DB:", err)
 	}
 	defer db.Close()
 
-	// Serve static HTML from ./static/
-	http.Handle("/", http.FileServer(http.Dir("./static")))
-	
-	http.HandleFunc("/employee", func(w http.ResponseWriter, r *http.Request) {
-		query := r.URL.Query().Get("name")
-		if query == "" {
-			http.Error(w, "Missing 'name' parameter", http.StatusBadRequest)
+	router := gin.Default()
+
+	// Serve static files
+	router.Static("/static", "./static") // serves /static/index.html
+	router.GET("/", func(c *gin.Context) {
+		c.File("./static/index.html") // serves it at /
+	})
+		
+
+	// API endpoint: /employee?name=Alice
+	router.GET("/employee", func(c *gin.Context) {
+		name := c.Query("name")
+		if name == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing 'name' parameter"})
 			return
 		}
 
-		rows, err := db.Query(`SELECT name, surname, birth_date, entry_date FROM employees_data WHERE name = $1`, query)
+		rows, err := db.Query(`SELECT name, surname, birth_date, entry_date FROM employees_data WHERE name = $1`, name)
 		if err != nil {
-			http.Error(w, "Database query error", http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database query failed"})
 			return
 		}
 		defer rows.Close()
@@ -45,18 +51,14 @@ func main() {
 		var results []Employee
 		for rows.Next() {
 			var e Employee
-			err := rows.Scan(&e.Name, &e.Surname, &e.BirthDate, &e.EntryDate)
-			if err != nil {
-				log.Println("Row scan error:", err)
-				continue
+			if err := rows.Scan(&e.Name, &e.Surname, &e.BirthDate, &e.EntryDate); err == nil {
+				results = append(results, e)
 			}
-			results = append(results, e)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(results)
+		c.JSON(http.StatusOK, results)
 	})
 
-	fmt.Println("Server started at http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Gin server running at http://localhost:8080")
+	router.Run(":8080")
 }
