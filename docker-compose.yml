@@ -1,0 +1,21 @@
+services:
+  server-promptq:
+    build: ./server
+    container_name: server-promptq
+    restart: always
+
+  client-promptq:
+    build: ./client
+    container_name: client-promptq
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    container_name: employeeapp-nginx
+    depends_on:
+      - client-promptq
+      - server-promptq
+    volumes:
+      - ./nginx.conf.prod:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
