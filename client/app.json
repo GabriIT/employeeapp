@@ -1,0 +1,14 @@
+{
+  "checks": {
+    "web": [
+      {
+        "type": "http",
+        "port": 3000,
+        "path": "/",
+        "initialDelay": 5,
+        "timeout": 5,
+        "attempts": 30
+      }
+    ]
+  }
+}

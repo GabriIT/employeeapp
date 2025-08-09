@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "web": [
+      {
+        "type": "http",
+        "port": 8080,
+        "path": "/healthz",
+        "initialDelay": 3,
+        "timeout": 5,
+        "attempts": 30
+      },
+      {
+        "type": "http",
+        "port": 8080,
+        "path": "/readyz",
+        "initialDelay": 3,
+        "timeout": 5,
+        "attempts": 30
+      }
+    ]
+  }
+}

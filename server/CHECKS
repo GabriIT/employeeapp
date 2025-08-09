@@ -1,4 +1,0 @@
-WAIT=10
-ATTEMPTS=30
-HTTP /healthz
-HTTP /readyz
