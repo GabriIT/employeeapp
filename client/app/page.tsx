@@ -38,7 +38,7 @@ export default function Home() {
 
       const data = await res.json();
       setResult(data);
-    } catch (e: any) {
+    } catch (e: String | any) {
       setError(e?.message || "Request failed");
     } finally {
       setLoading(false);
