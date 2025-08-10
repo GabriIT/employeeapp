@@ -2,16 +2,23 @@
 
 import { useState } from "react";
 
-const API_BASE =
+type Employee = {
+  name: string;
+  surname: string;
+  birth_date: string; // ISO date string from your API
+  entry_date: string; // ISO date string from your API
+};
+
+const API_BASE: string =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://api.emp.athenalabo.com";
 
 export default function Home() {
-  const [name, setName] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [name, setName] = useState<string>("");
+  const [result, setResult] = useState<Employee[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const search = async () => {
+  const search = async (): Promise<void> => {
     setError(null);
     setResult(null);
 
@@ -26,27 +33,25 @@ export default function Home() {
       const url = new URL("/api/employee", API_BASE);
       url.searchParams.set("name", q);
 
-      const res = await fetch(url.toString(), {
-        method: "GET",
-        // cache: "no-store", // optional
-      });
-
+      const res = await fetch(url.toString(), { method: "GET" });
       if (!res.ok) {
         const msg = await res.text().catch(() => "");
         throw new Error(`API ${res.status}${msg ? `: ${msg}` : ""}`);
       }
 
-      const data = await res.json();
+      const data: Employee[] = await res.json();
       setResult(data);
-    } catch (e: String | any) {
-      setError(e?.message || "Request failed");
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "Unknown error while fetching";
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main style={{ padding: 20, maxWidth: 600 }}>
+    <main style={{ padding: 20, maxWidth: 720 }}>
       <h1>Employee Lookup</h1>
       <div style={{ display: "flex", gap: 8, margin: "12px 0" }}>
         <input
@@ -60,10 +65,11 @@ export default function Home() {
         </button>
       </div>
 
-      {error && (
-        <p style={{ color: "crimson", whiteSpace: "pre-wrap" }}>{error}</p>
+      {error && <p style={{ color: "crimson" }}>{error}</p>}
+
+      {result && (
+        <pre>{JSON.stringify(result, null, 2)}</pre>
       )}
-      {result && <pre>{JSON.stringify(result, null, 2)}</pre>}
     </main>
   );
 }
