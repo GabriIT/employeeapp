@@ -1,10 +1,9 @@
 import Image from "next/image";
 import styles from "./page.module.css";
 
+"use client";
 const base = process.env.NEXT_PUBLIC_API_BASE!; // will be inlined at build-time
 
-
-"use client";
 import { useState } from "react";
 
 export default function Home() {
