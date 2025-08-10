@@ -1,6 +1,8 @@
 import Image from "next/image";
 import styles from "./page.module.css";
 
+const base = process.env.NEXT_PUBLIC_API_BASE!; // will be inlined at build-time
+
 
 "use client";
 import { useState } from "react";
@@ -10,7 +12,9 @@ export default function Home() {
   const [result, setResult] = useState(null);
 
   const search = async () => {
-    const res = await fetch(`/api/employee?name=${name}`);
+    const res = await fetch(`${base}/api/employee?name=${encodeURIComponent(name)}`);
+
+    // const res = await fetch(`/api/employee?name=${name}`);
     const data = await res.json();
     setResult(data);
   };

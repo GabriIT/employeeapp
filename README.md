@@ -48,3 +48,39 @@ npx create-next-app@latest client --ts --app --no-tailwind --eslint
 
 # Step 5: Build & Run
 docker compose up --build
+
+
+# Access to Postgres on VPS
+Role is 'empapp', password is 'postgres'
+
+# become postgres superuser
+sudo -u postgres psql <<'SQL'
+-- Create a dedicated login for the API (change the password!)
+CREATE ROLE empapp WITH LOGIN PASSWORD 'CHANGEME-strong-password';
+
+-- Create DB and make empapp the owner (skip if 'employees' already exists)
+CREATE DATABASE employees OWNER empapp;
+
+-- Make sure future objects are accessible to the owner (safe defaults)
+ALTER DATABASE employees OWNER TO empapp;
+SQL
+
+# If you created the DB above:
+psql -h 127.0.0.1 -U empapp -d employees -f ~/seed.sql
+
+# If the file contains "CREATE DATABASE employees; \c employees" at the top,
+# run it as superuser instead:
+# PGPASSWORD=<postgres_password> psql -h 127.0.0.1 -U postgres -f ~/seed.sql
+
+sudo -u postgres psql -d employees <<'SQL'
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT USAGE ON SCHEMA public TO empapp;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO empapp;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO empapp;
+SQL
+
+sudo dokku config:set api-emp \
+  DATABASE_URL="postgres://empapp:postgres@172.17.0.1:5432/employees?sslmode=disable" \
+  PGSSLMODE=disable
+sudo dokku ps:restart api-emp
