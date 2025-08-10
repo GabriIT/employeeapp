@@ -46,9 +46,11 @@ func main() {
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://emp.athenalabo.com", "http://localhost:3000"},
+		AllowOrigins:     []string{"https://emp.athenalabo.com", 
+		"http://emp.athenalabo.com", "https://localhost:3000"
+		},
 		AllowMethods:     []string{"GET", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type", "Origin"},
+		AllowHeaders:     []string{"Content-Type", "Authorization","Origin"},
 		AllowCredentials: false,
 		MaxAge:           12 * time.Hour,
 	}))
